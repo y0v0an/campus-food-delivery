@@ -1,0 +1,183 @@
+@startuml 优惠券使用流程图
+!theme plain
+title 校园外卖配送系统 - 优惠券使用流程图
+
+skinparam ActivityBackgroundColor #E1F5FE
+skinparam ActivityBorderColor #03A9F4
+
+|#LightBlue|学生用户|
+
+split
+  :方案A: 领取优惠券使用
+
+  :浏览商家优惠券;
+
+  note right
+    可通过以下方式浏览:
+    - 商家详情页
+    - 首页热门优惠券
+    - 我的优惠券页面
+  end note
+
+  :查看优惠券详情;
+  note right
+    - 门槛金额
+    - 优惠金额
+    - 剩余数量
+    - 过期时间
+    - 每人限领数量
+  end note
+
+  if (是否可领取?) then (否)
+    :显示不可领取原因;
+    note right
+      - 已领完
+      - 已达限领数量
+      - 已过期
+      - 已下架
+    end note
+    stop
+  else (是)
+    :点击"立即领取";
+  endif
+
+  |#Orange|后端系统|
+
+  :验证优惠券状态;
+  note right
+    - is_enabled = true
+    - remain_count > 0
+    - expire_at > now
+  end note
+
+  if (优惠券有效?) then (否)
+    |#LightBlue|学生用户|
+    :提示"优惠券不可用";
+    stop
+  else (是)
+    :检查用户领取记录;
+  endif
+
+  if (已达限领数量?) then (是)
+    |#LightBlue|学生用户|
+    :提示"已达到该券限领数量";
+    stop
+  else (否)
+    |#Orange|后端系统|
+    :扣减优惠券库存;
+    note right
+      remain_count = remain_count - 1
+    end note
+
+    :创建用户优惠券记录;
+    note right
+      - status: claimed
+      - 记录领取时间
+      - 继承优惠券过期时间
+    end note
+  endif
+
+  |#LightBlue|学生用户|
+  :领取成功;
+
+  :查看我的优惠券;
+
+split again
+  :方案B: 下单时直接使用
+
+  :添加商品到购物车;
+
+  :选择收货地址;
+
+  :进入结算页面;
+
+  |#Orange|后端系统|
+  :查询可用优惠券;
+  note right
+    条件:
+    - status = claimed
+    - merchant_id 匹配
+    - 未过期
+    - 订单金额 >= 门槛
+  end note
+
+  :返回可用优惠券列表;
+
+  |#LightBlue|学生用户|
+  :选择要使用的优惠券;
+  note right
+    可选择不使用优惠券
+  end note
+split again
+
+  :计算订单金额;
+
+  |#Orange|后端系统|
+
+  :计算商品总额;
+
+  :计算配送费;
+
+  :计算打包费;
+
+  if (使用优惠券?) then (是)
+    :验证优惠券有效性;
+    note right
+      - 用户是否拥有
+      - 状态为claimed
+      - 未过期
+      - 商家匹配
+      - 金额满足门槛
+    end note
+
+    :计算优惠金额;
+    note right
+      discount = min(优惠金额, 订单总额)
+    end note
+
+    :实付金额 = 商品总额 + 配送费 + 打包费 - 优惠金额;
+  else (否)
+    :优惠金额 = 0;
+    :实付金额 = 商品总额 + 配送费 + 打包费;
+  endif
+
+  :返回结算信息;
+
+  |#LightBlue|学生用户|
+  :确认订单信息;
+
+  :提交订单;
+
+  |#Orange|后端系统|
+  :创建订单;
+
+  if (使用优惠券?) then (是)
+    :核销优惠券;
+    note right
+      更新 user_coupon:
+      - status: claimed -> used
+      - 记录使用时间
+    end note
+  endif
+
+  :订单创建成功;
+
+  |#LightBlue|学生用户|
+  :支付订单;
+
+  |#Orange|后端系统|
+  :更新订单状态;
+
+  |#LightBlue|学生用户|
+  :等待商家接单;
+
+end split
+
+stop
+
+legend right
+  |<#LightBlue> 学生用户 |
+  |<#Orange> 后端系统 |
+endlegend
+
+@enduml

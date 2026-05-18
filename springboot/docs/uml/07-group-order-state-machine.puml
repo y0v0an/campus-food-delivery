@@ -1,0 +1,78 @@
+@startuml 拼单状态机图
+!theme plain
+title 校园外卖配送系统 - 拼单状态机图
+
+skinparam state {
+    BackgroundColor<<Active>> LightYellow
+    BackgroundColor<<Full>> LightOrange
+    BackgroundColor<<Done>> LightGreen
+    BackgroundColor<<Cancelled>> LightCoral
+}
+
+scale 1.2
+
+[*] --> open : 发起拼单
+
+state open <<Active>> {
+  description : "进行中"
+  note right: 拼单已发起\n等待更多用户参与\n\n状态条件:\ncurrent_count < target_count
+}
+
+state full <<Full>> {
+  description : "已满员"
+  note right: 拼单已满员\n等待商家接单\n\n状态条件:\ncurrent_count >= target_count
+}
+
+state accepted <<Done>> {
+  description : "已接单"
+  note right: 商家已接单\n已为成员生成订单\n拼单完成
+}
+
+state cancelled <<Cancelled>> {
+  description : "已取消"
+  note right: 拼单已取消\n可能原因:\n- 超时自动取消\n- 商家手动取消
+}
+
+' 正常流程
+open --> open : 用户参与拼单\n(current_count + 1 < target)
+open --> full : 用户参与拼单\n(current_count + 1 >= target)
+full --> accepted : 商家确认接单
+
+' 取消流程
+open --> cancelled : 超时取消\n(expire_at < now)
+open --> cancelled : 手动取消
+full --> cancelled : 超时取消\n(expire_at < now)
+full --> cancelled : 商家取消
+
+' 系统自动检查
+note right of open
+  系统定期检查
+  过期拼单自动取消
+end note
+
+note right of full
+  商家只能接
+  已满员的拼单
+end note
+
+' 终结状态
+cancelled --> [*]
+accepted --> [*]
+
+' 样式设置
+skinparam state {
+  ArrowColor Black
+  BorderColor Black
+  BackgroundColor White
+}
+
+skinparam stateBackgroundColor<<Active>> #FFF9C4
+skinparam stateBorderColor<<Active>> #FBC02D
+skinparam stateBackgroundColor<<Full>> #FFCC80
+skinparam stateBorderColor<<Full>> #F57C00
+skinparam stateBackgroundColor<<Done>> #C8E6C9
+skinparam stateBorderColor<<Done>> #388E3C
+skinparam stateBackgroundColor<<Cancelled>> #FFCDD2
+skinparam stateBorderColor<<Cancelled>> #D32F2F
+
+@enduml

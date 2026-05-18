@@ -1,0 +1,86 @@
+@startuml 订单状态机图
+!theme plain
+title 校园外卖配送系统 - 订单状态机图
+
+skinparam state {
+    BackgroundColor<<Active>> LightGreen
+    BackgroundColor<<Done>> LightBlue
+    BackgroundColor<<Cancelled>> LightCoral
+}
+
+scale 1.2
+
+[*] --> pending_payment : 创建订单
+
+state pending_payment <<Active>> {
+  description : "待支付"
+  note right: 用户已提交订单\n等待支付
+}
+
+state pending_accept <<Active>> {
+  description : "待接单"
+  note right: 用户已支付\n等待商家接单
+}
+
+state preparing <<Active>> {
+  description : "制作中"
+  note right: 商家已接单\n正在制作餐品
+}
+
+state ready <<Active>> {
+  description : "待配送/待取餐"
+  note right: 餐品已出餐\n等待骑手接单或用户取餐
+}
+
+state delivering <<Active>> {
+  description : "配送中"
+  note right: 骑手已取餐\n正在配送
+}
+
+state completed <<Done>> {
+  description : "已完成"
+  note right: 订单已完成\n不可再修改
+}
+
+state cancelled <<Cancelled>> {
+  description : "已取消"
+  note right: 订单已取消\n不可恢复
+}
+
+' 正常流程
+pending_payment --> pending_accept : 支付成功
+pending_accept --> preparing : 商家接单
+preparing --> ready : 出餐完成
+ready --> delivering : 骑手接单
+delivering --> completed : 送达确认
+
+' 店内就餐特殊流程
+ready --> completed : 用户确认取餐\n(店内就餐)
+
+' 取消流程
+pending_payment --> cancelled : 用户取消/超时
+pending_accept --> cancelled : 用户取消/商家拒单
+preparing --> cancelled : 商家取消
+ready --> cancelled : 超时未接单
+
+' 取消后的终结状态
+cancelled --> [*]
+
+' 完成后的终结状态
+completed --> [*]
+
+' 样式设置
+skinparam state {
+  ArrowColor Black
+  BorderColor Black
+  BackgroundColor White
+}
+
+skinparam stateBackgroundColor<<Active>> #C8E6C9
+skinparam stateBorderColor<<Active>> #4CAF50
+skinparam stateBackgroundColor<<Done>> #BBDEFB
+skinparam stateBorderColor<<Done>> #2196F3
+skinparam stateBackgroundColor<<Cancelled>> #FFCDD2
+skinparam stateBorderColor<<Cancelled>> #F44336
+
+@enduml

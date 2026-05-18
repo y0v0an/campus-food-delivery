@@ -1,0 +1,178 @@
+@startuml 类图
+!theme plain
+title 校园外卖配送系统 - 核心类图
+
+skinparam class {
+    BackgroundColor<<Entity>> LightBlue
+    BackgroundColor<<Controller>> LightGreen
+    BackgroundColor<<Service>> LightYellow
+    BackgroundColor<<Mapper>> LightCoral
+    BackgroundColor<<VO>> LightPink
+}
+
+' Controller层
+class OrderController <<Controller>> {
+  -OrderService orderService
+  -AddressService addressService
+  -UserService userService
+  +createOrder(params): Result<Order>
+  +getById(id): Result<Order>
+  +listByStudentId(id): Result<List<Order>>
+  +listByMerchantId(id, status): Result<List<Order>>
+  +acceptOrder(params): Result<String>
+  +cancelOrder(id): Result<String>
+  +updateStatus(params): Result<String>
+}
+
+class CouponController <<Controller>> {
+  -CouponService couponService
+  +listByMerchant(id): Result<List<Coupon>>
+  +claim(params): Result<String>
+  +listUserCoupons(id, ...): Result<List<UserCoupon>>
+  +add(coupon): Result<String>
+  +update(coupon): Result<String>
+  +delete(id): Result<String>
+}
+
+class GroupOrderController <<Controller>> {
+  -GroupOrderService groupOrderService
+  +create(params): Result<GroupOrder>
+  +join(params): Result<String>
+  +listOpenByMerchant(id): Result<List<GroupOrder>>
+  +listHot(limit): Result<List<GroupOrder>>
+  +accept(id, merchantId): Result<String>
+}
+
+' Service层
+class OrderService <<Service>> {
+  -OrderMapper orderMapper
+  -OrderItemMapper orderItemMapper
+  -CartMapper cartMapper
+  -CouponService couponService
+  +createOrder(...): Order
+  +getById(id): Order
+  +listByStudentId(id): List<Order>
+  +listByMerchantId(id, status): List<Order>
+  +acceptOrder(id, riderId, name): boolean
+  +updateStatus(id, status): boolean
+  +cancelOrder(id): boolean
+  -generateOrderNo(): String
+  -fillOrderItems(order): void
+}
+
+class CouponService <<Service>> {
+  -CouponMapper couponMapper
+  -UserCouponMapper userCouponMapper
+  +listByMerchantId(id): List<Coupon>
+  +claimCoupon(userId, id): boolean
+  +listUserCouponsGrouped(...): List<VO>
+  +consumeUserCouponForOrder(...): CouponUseResult
+  +calculateDiscountForOrder(coupon, amount): BigDecimal
+  +add(coupon): boolean
+  +update(coupon): boolean
+  +deleteById(id): boolean
+}
+
+class GroupOrderService <<Service>> {
+  -GroupOrderMapper groupOrderMapper
+  -GroupOrderMemberMapper memberMapper
+  +createGroupOrder(userId, dishId, ...): GroupOrder
+  +joinGroupOrder(id, userId): boolean
+  +listOpenByMerchantId(id): List<GroupOrder>
+  +listHotOpen(limit): List<GroupOrder>
+  +acceptGroupOrder(id, merchantId): boolean
+  -cancelExpiredOpenOrders(): void
+  -fillMembers(orders): void
+}
+
+' Entity层
+class Order <<Entity>> {
+  -String id
+  -String orderNo
+  -String studentId
+  -String merchantId
+  -String riderId
+  -BigDecimal totalAmount
+  -BigDecimal actualAmount
+  -String status
+  -String orderType
+  -List<OrderItem> items
+  -Review review
+}
+
+class Coupon <<Entity>> {
+  -String id
+  -String merchantId
+  -String name
+  -BigDecimal thresholdAmount
+  -BigDecimal discountAmount
+  -LocalDateTime expireAt
+  -Integer remainCount
+  -Boolean isEnabled
+}
+
+class UserCoupon <<Entity>> {
+  -String id
+  -String userId
+  -String couponId
+  -String merchantId
+  -String status
+  -LocalDateTime claimedAt
+  -LocalDateTime usedAt
+  -Coupon coupon
+}
+
+class GroupOrder <<Entity>> {
+  -String id
+  -String merchantId
+  -String dishId
+  -String initiatorId
+  -Integer targetCount
+  -Integer currentCount
+  -String status
+  -LocalDateTime expireAt
+  -List<GroupOrderMember> members
+}
+
+class GroupOrderMember <<Entity>> {
+  -String id
+  -String groupOrderId
+  -String userId
+  -String userName
+  -Integer quantity
+  -BigDecimal amount
+}
+
+' VO类
+class UserCouponMerchantGroupVo <<VO>> {
+  -String merchantId
+  -String merchantName
+  -List<UserCoupon> coupons
+}
+
+class CouponUseResult <<VO>> {
+  -Coupon coupon
+  -BigDecimal discount
+}
+
+' 关系
+OrderController ..> OrderService : uses
+CouponController ..> CouponService : uses
+GroupOrderController ..> GroupOrderService : uses
+
+OrderService ..> Order : manipulates
+OrderService ..> CouponService : uses
+
+CouponService ..> Coupon : manipulates
+CouponService ..> UserCoupon : manipulates
+CouponService ..> UserCouponMerchantGroupVo : creates
+CouponService ..> CouponUseResult : creates
+
+GroupOrderService ..> GroupOrder : manipulates
+GroupOrderService ..> GroupOrderMember : manipulates
+
+Order o-- OrderItem : contains
+GroupOrder o-- GroupOrderMember : contains
+UserCoupon - Coupon : refers
+
+@enduml

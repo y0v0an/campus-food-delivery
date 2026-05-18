@@ -1,0 +1,259 @@
+@startuml 实体关系图
+!theme plain
+title 校园外卖配送系统 - 实体关系图(ER图)
+
+' 用户表
+entity "users\n用户表" as user {
+  *id : VARCHAR <<PK>>
+  --
+  username : VARCHAR
+  password : VARCHAR
+  role : VARCHAR
+  name : VARCHAR
+  phone : VARCHAR
+  avatar : VARCHAR
+  is_rider : BOOLEAN
+  is_disabled : BOOLEAN
+  is_online : BOOLEAN
+  created_at : DATETIME
+  updated_at : DATETIME
+}
+
+' 商家表
+entity "merchants\n商家表" as merchant {
+  *id : VARCHAR <<PK>>
+  --
+  user_id : VARCHAR <<FK>>
+  name : VARCHAR
+  logo : VARCHAR
+  description : VARCHAR
+  address : VARCHAR
+  phone : VARCHAR
+  rating : DECIMAL
+  month_sales : INT
+  categories : VARCHAR
+  is_open : BOOLEAN
+  delivery_fee : DECIMAL
+  min_order : DECIMAL
+  delivery_time : VARCHAR
+  lat : DECIMAL
+  lng : DECIMAL
+  created_at : DATETIME
+  updated_at : DATETIME
+}
+
+' 菜品表
+entity "dishes\n菜品表" as dish {
+  *id : VARCHAR <<PK>>
+  --
+  merchant_id : VARCHAR <<FK>>
+  name : VARCHAR
+  description : VARCHAR
+  price : DECIMAL
+  original_price : DECIMAL
+  image : VARCHAR
+  category : VARCHAR
+  stock : INT
+  sales : INT
+  is_available : BOOLEAN
+  is_group_enabled : BOOLEAN
+  group_target_count : INT
+  group_price : DECIMAL
+  group_duration_minutes : INT
+  created_at : DATETIME
+  updated_at : DATETIME
+}
+
+' 订单表
+entity "orders\n订单表" as order {
+  *id : VARCHAR <<PK>>
+  --
+  order_no : VARCHAR <<UK>>
+  student_id : VARCHAR <<FK>>
+  merchant_id : VARCHAR <<FK>>
+  rider_id : VARCHAR <<FK>>
+  total_amount : DECIMAL
+  delivery_fee : DECIMAL
+  packing_fee : DECIMAL
+  coupon_id : VARCHAR <<FK>>
+  coupon_discount : DECIMAL
+  actual_amount : DECIMAL
+  status : VARCHAR
+  order_type : VARCHAR
+  address_building : VARCHAR
+  address_room : VARCHAR
+  address_contact : VARCHAR
+  address_phone : VARCHAR
+  remark : VARCHAR
+  created_at : DATETIME
+  paid_at : DATETIME
+  accepted_at : DATETIME
+  ready_at : DATETIME
+  picked_at : DATETIME
+  delivered_at : DATETIME
+}
+
+' 订单明细表
+entity "order_items\n订单明细表" as order_item {
+  *id : VARCHAR <<PK>>
+  --
+  order_id : VARCHAR <<FK>>
+  dish_id : VARCHAR <<FK>>
+  dish_name : VARCHAR
+  dish_image : VARCHAR
+  price : DECIMAL
+  quantity : INT
+  subtotal : DECIMAL
+}
+
+' 优惠券表
+entity "coupons\n优惠券表" as coupon {
+  *id : VARCHAR <<PK>>
+  --
+  merchant_id : VARCHAR <<FK>>
+  name : VARCHAR
+  threshold_amount : DECIMAL
+  discount_amount : DECIMAL
+  expire_at : DATETIME
+  total_count : INT
+  remain_count : INT
+  claim_limit_per_user : INT
+  is_enabled : BOOLEAN
+  created_at : DATETIME
+}
+
+' 用户优惠券表
+entity "user_coupons\n用户优惠券表" as user_coupon {
+  *id : VARCHAR <<PK>>
+  --
+  user_id : VARCHAR <<FK>>
+  coupon_id : VARCHAR <<FK>>
+  merchant_id : VARCHAR <<FK>>
+  status : VARCHAR
+  claimed_at : DATETIME
+  used_at : DATETIME
+  expire_at : DATETIME
+}
+
+' 拼单表
+entity "group_orders\n拼单表" as group_order {
+  *id : VARCHAR <<PK>>
+  --
+  merchant_id : VARCHAR <<FK>>
+  dish_id : VARCHAR <<FK>>
+  initiator_id : VARCHAR <<FK>>
+  target_count : INT
+  current_count : INT
+  unit_price : DECIMAL
+  status : VARCHAR
+  remark : VARCHAR
+  created_at : DATETIME
+  expire_at : DATETIME
+  accepted_at : DATETIME
+  cancelled_at : DATETIME
+}
+
+' 拼单成员表
+entity "group_order_members\n拼单成员表" as group_member {
+  *id : VARCHAR <<PK>>
+  --
+  group_order_id : VARCHAR <<FK>>
+  user_id : VARCHAR <<FK>>
+  user_name : VARCHAR
+  quantity : INT
+  amount : DECIMAL
+  created_at : DATETIME
+}
+
+' 骑手信息表
+entity "rider_info\n骑手信息表" as rider_info {
+  *id : VARCHAR <<PK>>
+  --
+  user_id : VARCHAR <<FK>>
+  available_time : VARCHAR
+  total_deliveries : INT
+  rating : DECIMAL
+  created_at : DATETIME
+}
+
+' 骑手申请表
+entity "rider_applications\n骑手申请表" as rider_app {
+  *id : VARCHAR <<PK>>
+  --
+  user_id : VARCHAR <<FK>>
+  student_id : VARCHAR
+  phone : VARCHAR
+  available_time : VARCHAR
+  status : VARCHAR
+  created_at : DATETIME
+}
+
+' 评价表
+entity "reviews\n评价表" as review {
+  *id : VARCHAR <<PK>>
+  --
+  order_id : VARCHAR <<FK>>
+  student_id : VARCHAR <<FK>>
+  merchant_id : VARCHAR <<FK>>
+  rating : INT
+  content : VARCHAR
+  images : VARCHAR
+  created_at : DATETIME
+}
+
+' 购物车表
+entity "cart_items\n购物车表" as cart {
+  *id : VARCHAR <<PK>>
+  --
+  user_id : VARCHAR <<FK>>
+  merchant_id : VARCHAR <<FK>>
+  dish_id : VARCHAR <<FK>>
+  quantity : INT
+  created_at : DATETIME
+}
+
+' 地址表
+entity "addresses\n地址表" as address {
+  *id : VARCHAR <<PK>>
+  --
+  user_id : VARCHAR <<FK>>
+  building : VARCHAR
+  room : VARCHAR
+  contact : VARCHAR
+  phone : VARCHAR
+  is_default : BOOLEAN
+}
+
+' 关系定义
+user ||--o{ merchant : "关联"
+user ||--o{ order : "学生下单"
+user ||--o{ rider_info : "骑手信息"
+user ||--o{ rider_app : "申请骑手"
+user ||--o{ user_coupon : "领取优惠券"
+user ||--o{ cart : "购物车"
+user ||--o{ address : "收货地址"
+user ||--o{ review : "评价"
+user ||--o{ group_member : "参与拼单"
+
+merchant ||--o{ dish : "拥有菜品"
+merchant ||--o{ order : "接收订单"
+merchant ||--o{ coupon : "发布优惠券"
+merchant ||--o{ group_order : "拼单活动"
+merchant ||--o{ review : "商家评价"
+
+dish ||--o{ order_item : "订单明细"
+dish ||--o{ cart : "购物车"
+dish ||--o{ group_order : "拼单菜品"
+
+order ||--o{ order_item : "包含明细"
+order ||--o{ review : "订单评价"
+order ||--o| coupon : "使用优惠券"
+
+user ||--o{ group_order : "发起拼单"
+group_order ||--o{ group_member : "拼单成员"
+
+rider_info ||--o{ order : "配送订单"
+
+coupon ||--o{ user_coupon : "领取记录"
+
+@enduml

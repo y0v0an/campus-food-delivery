@@ -1,0 +1,137 @@
+@startuml 系统架构图
+!theme plain
+title 校园外卖配送系统 - 系统架构图
+
+skinparam rectangle {
+    BackgroundColor<<Controller>> LightBlue
+    BackgroundColor<<Service>> LightGreen
+    BackgroundColor<<Mapper>> LightYellow
+    BackgroundColor<<Database>> LightCoral
+}
+
+package "表现层 (Controller)" <<Cloud>> {
+    [UserController] <<Controller>>
+    [OrderController] <<Controller>>
+    [MerchantController] <<Controller>>
+    [CouponController] <<Controller>>
+    [GroupOrderController] <<Controller>>
+    [RiderController] <<Controller>>
+    [CartController] <<Controller>>
+    [ReviewController] <<Controller>>
+    [AddressController] <<Controller>>
+    [FileController] <<Controller>>
+}
+
+package "业务层 (Service)" <<Cloud>> {
+    [UserService] <<Service>>
+    [OrderService] <<Service>>
+    [MerchantService] <<Service>>
+    [CouponService] <<Service>>
+    [GroupOrderService] <<Service>>
+    [RiderService] <<Service>>
+    [CartService] <<Service>>
+    [ReviewService] <<Service>>
+    [AddressService] <<Service>>
+}
+
+package "持久层 (Mapper)" <<Cloud>> {
+    [UserMapper] <<Mapper>>
+    [OrderMapper] <<Mapper>>
+    [OrderItemMapper] <<Mapper>>
+    [MerchantMapper] <<Mapper>>
+    [DishMapper] <<Mapper>>
+    [CouponMapper] <<Mapper>>
+    [UserCouponMapper] <<Mapper>>
+    [GroupOrderMapper] <<Mapper>>
+    [GroupOrderMemberMapper] <<Mapper>>
+    [RiderInfoMapper] <<Mapper>>
+    [RiderApplicationMapper] <<Mapper>>
+    [CartMapper] <<Mapper>>
+    [ReviewMapper] <<Mapper>>
+    [AddressMapper] <<Mapper>>
+}
+
+database "数据库层 (MySQL)" <<Database>> {
+    folder "数据表" {
+        [users]
+        [orders]
+        [order_items]
+        [merchants]
+        [dishes]
+        [coupons]
+        [user_coupons]
+        [group_orders]
+        [group_order_members]
+        [rider_info]
+        [rider_applications]
+        [cart_items]
+        [reviews]
+        [addresses]
+        [delivery_tracks]
+    }
+}
+
+' 表现层调用业务层
+OrderController --> OrderService
+UserController --> UserService
+MerchantController --> MerchantService
+CouponController --> CouponService
+GroupOrderController --> GroupOrderService
+RiderController --> RiderService
+CartController --> CartService
+ReviewController --> ReviewService
+AddressController --> AddressService
+
+' 业务层调用持久层
+OrderService --> OrderMapper
+OrderService --> OrderItemMapper
+UserService --> UserMapper
+MerchantService --> MerchantMapper
+MerchantService --> DishMapper
+CouponService --> CouponMapper
+CouponService --> UserCouponMapper
+GroupOrderService --> GroupOrderMapper
+GroupOrderService --> GroupOrderMemberMapper
+RiderService --> RiderInfoMapper
+RiderService --> RiderApplicationMapper
+CartService --> CartMapper
+ReviewService --> ReviewMapper
+AddressService --> AddressMapper
+
+' 持久层访问数据库
+UserMapper --> users
+OrderMapper --> orders
+OrderItemMapper --> order_items
+MerchantMapper --> merchants
+DishMapper --> dishes
+CouponMapper --> coupons
+UserCouponMapper --> user_coupons
+GroupOrderMapper --> group_orders
+GroupOrderMemberMapper --> group_order_members
+RiderInfoMapper --> rider_info
+RiderApplicationMapper --> rider_applications
+CartMapper --> cart_items
+ReviewMapper --> reviews
+AddressMapper --> addresses
+
+note right of 表现层
+  接收HTTP请求
+  参数校验与转换
+  调用Service层
+  返回统一响应
+end note
+
+note right of 业务层
+  实现核心业务逻辑
+  事务管理
+  调用Mapper层
+  业务规则校验
+end note
+
+note right of 持久层
+  基于MyBatis-Plus的CRUD
+  数据库交互
+  SQL映射管理
+end note
+
+@enduml

@@ -1,0 +1,144 @@
+@startuml 外卖订餐流程图
+!theme plain
+title 校园外卖配送系统 - 外卖订餐流程图
+
+skinparam ActivityBackgroundColor #E8F5E9
+skinparam ActivityBorderColor #4CAF50
+
+|#LightBlue|前端用户|
+
+start
+
+:浏览商家/菜品;
+
+:添加商品到购物车;
+
+:选择收货地址;
+
+note right
+  支持选择默认地址
+  或新增地址
+end note
+
+:选择优惠券(可选);
+
+:备注信息(可选);
+
+:选择订单类型;
+
+note right
+  delivery - 外卖配送
+  dine_in - 店内就餐
+end note
+
+if (订单类型?) then (店内就餐)
+  :无需配送地址;
+  :无需骑手;
+  :免配送费;
+else (外卖配送)
+  :验证配送地址;
+  :计算配送费;
+  :计算打包费;
+endif
+
+:提交订单;
+
+|#Orange|后端系统|
+
+:验证购物车商品;
+
+:计算订单总额;
+
+:验证优惠券可用性;
+
+if (使用优惠券?) then (是)
+  :扣减优惠券库存;
+  :计算优惠金额;
+  note right
+    更新user_coupon状态
+    claimed -> used
+  end note
+else (否)
+  :优惠金额为0;
+endif
+
+:生成订单编号;
+note right
+  格式: ORD + yyyyMMdd + 随机数
+  示例: ORD20260428001
+end note
+
+:创建订单记录;
+note right
+  状态: pending_accept
+  记录商品明细
+  清空购物车
+end note
+
+:返回订单信息;
+
+|#LightBlue|前端用户|
+
+:确认支付;
+
+|#Orange|后端系统|
+:更新订单状态;
+note right
+  pending_accept
+  记录支付时间
+end note
+
+|#LightYellow|商家端|
+:接收新订单通知;
+:商家确认接单;
+:更新订单状态 preparing;
+:开始制作餐品;
+
+:制作完成;
+:更新订单状态 ready;
+
+if (订单类型?) then (店内就餐)
+ |#LightBlue|前端用户|
+  :收到出餐通知;
+  :到店取餐;
+  :确认取餐;
+
+  |#Orange|后端系统|
+  :更新订单状态 completed;
+else (外卖配送)
+  |#Orange|后端系统|
+  :订单进入配送池;
+
+  |#LightCoral|骑手端|
+  :浏览可接订单;
+  :选择接单;
+
+  |#Orange|后端系统|
+  :绑定骑手信息;
+  :更新订单状态 delivering;
+
+  |#LightCoral|骑手端|
+  :前往商家取餐;
+  :取餐成功;
+  :前往配送地址;
+  :送达目的地;
+  :确认送达;
+
+  |#Orange|后端系统|
+  :更新订单状态 completed;
+  :记录送达时间;
+
+  |#LightBlue|前端用户|
+  :收到送达通知;
+endif
+
+stop
+
+legend right
+  |<#LightBlue> 前端用户 |
+  |<#Orange> 后端系统 |
+  |<#LightYellow> 商家端 |
+  |<#LightCoral> 骑手端 |
+endlegend
+
+@enduml

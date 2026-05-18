@@ -1,0 +1,134 @@
+@startuml 用例图
+!theme plain
+title 校园外卖配送系统 - 用例图
+
+left to right direction
+
+' 角色定义
+actor 学生 as Student
+actor 商家 as Merchant
+actor 骑手 as Rider
+actor 管理员 as Admin
+
+' 学生用例
+package "学生端功能" {
+  usecase "浏览商家/菜品" as UC1
+  usecase "搜索商家" as UC2
+  usecase "添加购物车" as UC3
+  usecase "管理收货地址" as UC4
+  usecase "创建订单" as UC5
+  usecase "支付订单" as UC6
+  usecase "查看我的订单" as UC7
+  usecase "取消订单" as UC8
+  usecase "确认收货" as UC9
+  usecase "评价订单" as UC10
+  usecase "领取优惠券" as UC11
+  usecase "查看我的优惠券" as UC12
+  usecase "发起拼单" as UC13
+  usecase "参与拼单" as UC14
+  usecase "查看拼单列表" as UC15
+  usecase "申请成为骑手" as UC16
+  usecase "到店自取" as UC17
+}
+
+' 商家用例
+package "商家端功能" {
+  usecase "注册商家" as MC1
+  usecase "管理菜品" as MC2
+  usecase "发布优惠券" as MC3
+  usecase "查看订单列表" as MC4
+  usecase "接单/拒单" as MC5
+  usecase "更新订单状态" as MC6
+  usecase "查看评价" as MC7
+  usecase "查看营业统计" as MC8
+  usecase "管理拼单" as MC9
+  usecase "商家免单制单" as MC10
+}
+
+' 骑手用例
+package "骑手端功能" {
+  usecase "申请成为骑手" as RC1
+  usecase "上线/下线" as RC2
+  usecase "查看订单池" as RC3
+  usecase "接单" as RC4
+  usecase "更新配送状态" as RC5
+  usecase "查看配送记录" as RC6
+  usecase "查看收入统计" as RC7
+}
+
+' 管理员用例
+package "管理端功能" {
+  usecase "用户管理" as AC1
+  usecase "商家审核" as AC2
+  usecase "骑手审核" as AC3
+  usecase "订单管理" as AC4
+  usecase "数据统计" as AC5
+  usecase "系统配置" as AC6
+}
+
+' 关系定义
+Student --> UC1
+Student --> UC2
+Student --> UC3
+Student --> UC4
+Student --> UC5
+Student --> UC6
+Student --> UC7
+Student --> UC8
+Student --> UC9
+Student --> UC10
+Student --> UC11
+Student --> UC12
+Student --> UC13
+Student --> UC14
+Student --> UC15
+Student --> UC16
+Student --> UC17
+
+Merchant --> MC1
+Merchant --> MC2
+Merchant --> MC3
+Merchant --> MC4
+Merchant --> MC5
+Merchant --> MC6
+Merchant --> MC7
+Merchant --> MC8
+Merchant --> MC9
+Merchant --> MC10
+
+Rider --> RC1
+Rider --> RC2
+Rider --> RC3
+Rider --> RC4
+Rider --> RC5
+Rider --> RC6
+Rider --> RC7
+
+Admin --> AC1
+Admin --> AC2
+Admin --> AC3
+Admin --> AC4
+Admin --> AC5
+Admin --> AC6
+
+' 扩展关系
+UC5 ..> UC3 : <<include>>
+UC5 ..> UC11 : <<include>>
+UC9 ..> UC10 : <<include>>
+
+MC5 ..> MC6 : <<include>>
+
+RC4 ..> RC5 : <<include>>
+
+' 继承关系说明
+note right of Student
+  学生角色可申请
+  成为骑手
+end note
+
+note right of Admin
+  管理员拥有
+  最高权限
+end note
+
+@enduml

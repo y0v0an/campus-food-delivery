@@ -1,0 +1,67 @@
+@startuml 订单创建时序图
+!theme plain
+title 校园外卖配送系统 - 订单创建时序图
+
+actor 学生用户 as Student
+participant "前端页面" as Front
+participant "OrderController" as Controller
+participant "OrderService" as OrderService
+participant "CartService" as CartService
+participant "DishService" as DishService
+participant "CouponService" as CouponService
+participant "MerchantService" as MerchantService
+participant "数据库" as DB
+
+Student -> Front : 选择地址、备注、优惠券
+Front -> Front : 确认订单信息
+Front -> Controller : POST /api/order/create\n{studentId, addressId,\nremark, userCouponId, orderType}
+
+Controller -> OrderService : createOrder(params)
+
+group 订单创建流程
+  OrderService -> CartService : 获取购物车商品
+  CartService -> DB : SELECT * FROM cart_items\nWHERE user_id = ?
+  DB --> CartService : 购物车商品列表
+  CartService --> OrderService : cartItems
+
+  OrderService -> OrderService : 验证购物车非空
+
+  OrderService -> MerchantService : 获取商家信息
+  MerchantService -> DB : SELECT * FROM merchants\nWHERE id = ?
+  DB --> MerchantService : 商家信息
+  MerchantService --> OrderService : merchant
+
+  OrderService -> DishService : 批量获取菜品
+  DishService -> DB : SELECT * FROM dishes\nWHERE id IN (...)
+  DB --> DishService : 菜品信息
+  DishService --> OrderService : dishes
+
+  OrderService -> OrderService : 计算商品总额
+  OrderService -> OrderService : 计算配送费、打包费
+
+  alt 使用优惠券
+    OrderService -> CouponService : consumeUserCouponForOrder(\nuserCouponId, userId,\nmerchantId, totalAmount)
+    CouponService -> DB : SELECT * FROM user_coupons\nWHERE id = ?
+    DB --> CouponService : 用户优惠券
+    CouponService -> CouponService : 验证优惠券有效性
+    CouponService -> DB : UPDATE user_coupons\nSET status='used',\nused_at=NOW()
+    CouponService -> DB : UPDATE coupons\nSET remain_count=remain_count-1
+    CouponService --> OrderService : CouponUseResult{\ncoupon, discount}
+    OrderService -> OrderService : 计算优惠后金额
+  end
+
+  OrderService -> DB : INSERT INTO orders\nVALUES (...)
+  DB --> OrderService : 订单创建成功
+
+  OrderService -> DB : 批量INSERT INTO order_items
+  DB --> OrderService : 订单明细创建成功
+
+  OrderService -> CartService : 清空购物车
+  CartService -> DB : DELETE FROM cart_items\nWHERE user_id = ?
+end
+
+OrderService --> Controller : Order对象
+Controller --> Front : Result<Order>
+Front --> Student : 显示订单详情/跳转支付
+
+@enduml
