@@ -459,10 +459,10 @@ public class GroupOrderService {
             order.setActualAmount(groupOrder.getUnitPrice().add(groupDeliveryFee));
             order.setStatus("preparing");
             order.setOrderType("delivery");
-            order.setAddressBuilding("拼单外送");
-            order.setAddressRoom("");
-            order.setAddressContact(m.getUserName());
-            order.setAddressPhone("");
+            order.setAddressBuilding(m.getAddressBuilding() != null ? m.getAddressBuilding() : "拼单外送");
+            order.setAddressRoom(m.getAddressRoom() != null ? m.getAddressRoom() : "");
+            order.setAddressContact(m.getAddressContact() != null ? m.getAddressContact() : m.getUserName());
+            order.setAddressPhone(m.getAddressPhone() != null ? m.getAddressPhone() : "");
             order.setRemark("拼单订单#" + groupOrder.getId());
 
             // 设置拼单关联标记
