@@ -19,4 +19,8 @@ public class GroupOrderMember {
     private Integer quantity;
     private BigDecimal amount;
     private LocalDateTime createdAt;
+    private String addressBuilding;
+    private String addressRoom;
+    private String addressContact;
+    private String addressPhone;
 }
