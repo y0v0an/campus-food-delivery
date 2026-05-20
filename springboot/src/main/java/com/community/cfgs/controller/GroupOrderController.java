@@ -23,7 +23,9 @@ public class GroupOrderController {
             String dishId = (String) params.get("dishId");
             String remark = (String) params.get("remark");
             String couponId = (String) params.get("couponId");
-            return Result.success(groupOrderService.createGroupOrder(userId, dishId, null, remark, couponId));
+            // 新增：获取地址信息
+            Map<String, String> address = (Map<String, String>) params.get("address");
+            return Result.success(groupOrderService.createGroupOrder(userId, dishId, null, remark, couponId, address));
         } catch (Exception e) {
             return Result.error(e.getMessage());
         }
