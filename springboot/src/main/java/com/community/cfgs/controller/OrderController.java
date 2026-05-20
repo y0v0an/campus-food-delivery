@@ -36,14 +36,14 @@ public class OrderController {
 
         try {
             if ("dine_in".equals(orderType)) {
-                Order order = orderService.createOrder(studentId, null, null, remark, "dine_in", userCouponId);
+                Order order = orderService.createOrder(studentId, null, remark, "dine_in", userCouponId);
                 return Result.success(order);
             }
             Address address = addressService.getById(addressId);
             if (address == null) {
                 return Result.error("地址不存在");
             }
-            Order order = orderService.createOrder(studentId, addressId, address, remark, "delivery", userCouponId);
+            Order order = orderService.createOrder(studentId, address, remark, "delivery", userCouponId);
             return Result.success(order);
         } catch (Exception e) {
             return Result.error(e.getMessage());

@@ -229,6 +229,28 @@
         </span>
       </template>
     </el-dialog>
+
+    <!-- 参与拼单对话框 -->
+    <el-dialog
+      v-model="joinDialogVisible"
+      title="参与拼单"
+      width="90%"
+      :style="{ maxWidth: '400px' }"
+    >
+      <div v-if="joiningOrder">
+        <p class="join-hint">确定要参与「{{ joiningOrder.dishName }}」的拼单吗？</p>
+        <div class="join-info">
+          <span>当前进度：{{ joiningOrder.currentCount }}/{{ joiningOrder.targetCount }}人</span>
+        </div>
+        <AddressSelector v-model="selectedAddress" />
+      </div>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="joinDialogVisible = false; selectedAddress = null">再想想</el-button>
+          <el-button type="primary" @click="confirmJoinGroup">确定参与</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -268,6 +290,10 @@ const groupOrderDialogVisible = ref(false)
 const currentDish = ref(null)
 const selectedAddress = ref(null)
 const targetCount = ref(2)
+
+// 参与拼单对话框
+const joinDialogVisible = ref(false)
+const joiningOrder = ref(null)
 
 // 菜品按分类
 const dishesByCategory = computed(() => {
@@ -359,8 +385,7 @@ const decreaseFromCart = (dish) => {
 // 加载商家信息
 const loadMerchant = async (merchantId) => {
   try {
-    const result = await request.get(`/merchant/${merchantId}`)
-    merchant.value = result
+    merchant.value = await request.get(`/merchant/${merchantId}`)
   } catch (error) {
     console.error('加载商家信息失败:', error)
     ElMessage.error('加载商家信息失败')
@@ -370,8 +395,7 @@ const loadMerchant = async (merchantId) => {
 // 加载菜品列表
 const loadDishes = async (merchantId) => {
   try {
-    const result = await request.get(`/dish/list/${merchantId}`)
-    dishes.value = result || []
+    dishes.value = (await request.get(`/dish/list/${merchantId}`)) || []
   } catch (error) {
     console.error('加载菜品列表失败:', error)
   }
@@ -515,12 +539,33 @@ const joinGroupOrder = async (groupOrder) => {
     ElMessage.warning('请先登录')
     return
   }
+
+  // 显示参与拼单对话框
+  joiningOrder.value = groupOrder
+  joinDialogVisible.value = true
+}
+
+// 确认参与拼单
+const confirmJoinGroup = async () => {
+  if (!selectedAddress.value) {
+    ElMessage.warning('请选择收货地址')
+    return
+  }
+
   try {
     await request.post('/group-order/join', {
-      groupOrderId: groupOrder.id,
-      userId: userStore.userId
+      groupOrderId: joiningOrder.value.id,
+      userId: userStore.userId,
+      address: {
+        building: selectedAddress.value.building,
+        room: selectedAddress.value.room,
+        contact: selectedAddress.value.contact,
+        phone: selectedAddress.value.phone
+      }
     })
     ElMessage.success('参与拼单成功')
+    joinDialogVisible.value = false
+    selectedAddress.value = null
     loadGroupOrders(merchant.value.id)
   } catch (error) {
     // interceptor handles message
@@ -597,6 +642,19 @@ onMounted(async () => {
   // 初始化购物车
   if (userStore.userId) {
     cartStore.loadCart(userStore.userId)
+  }
+
+  // 处理从拼单列表跳转过来的发起拼单请求
+  const startGroupDishId = route.query.startGroup
+  if (startGroupDishId) {
+    // 找到对应的菜品
+    const dish = dishes.value.find(d => d.id === startGroupDishId)
+    if (dish) {
+      // 等待下一帧确保菜品数据已加载
+      setTimeout(() => {
+        startGroupOrder(dish)
+      }, 100)
+    }
   }
 })
 </script>
@@ -1180,5 +1238,21 @@ onMounted(async () => {
   justify-content: space-between;
   font-size: 12px;
   color: #909399;
+}
+
+/* 参与拼单对话框 */
+.join-hint {
+  font-size: 14px;
+  color: #303133;
+  margin: 0 0 12px 0;
+}
+
+.join-info {
+  padding: 8px 12px;
+  background: #f5f7fa;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #606266;
+  margin-bottom: 16px;
 }
 </style>

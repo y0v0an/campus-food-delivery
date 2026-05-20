@@ -39,7 +39,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import request from '@/axios/request'
@@ -66,8 +66,9 @@ const selectedAddress = computed({
 
 // 加载地址列表
 const loadAddresses = async () => {
+  if (!userStore.userId) return
   try {
-    const result = await request.get(`/address/list/${userStore.userId}`)
+    const result = await request.get(`/address/${userStore.userId}`)
     addresses.value = result || []
     // 如果没有选中地址且有默认地址，自动选中默认地址
     if (!selectedAddress.value && addresses.value.length > 0) {
@@ -93,8 +94,24 @@ const maskPhone = (phone) => {
 
 const goToAddAddress = () => {
   showPicker.value = false
-  router.push('/student/address')
+  router.push('/student/addresses')
 }
+
+// 监听 modelValue 变化，当从外部清空时尝试重新选择默认地址
+watch(() => props.modelValue, (newVal) => {
+  if (!newVal && addresses.value.length > 0) {
+    // 外部清空了地址，尝试自动选择默认地址
+    const defaultAddr = addresses.value.find(a => a.isDefault)
+    if (defaultAddr) {
+      // 使用 nextTick 避免在 watch 中直接修改 props
+      setTimeout(() => {
+        if (!props.modelValue) {
+          emit('update:modelValue', defaultAddr)
+        }
+      }, 0)
+    }
+  }
+})
 
 onMounted(() => {
   loadAddresses()

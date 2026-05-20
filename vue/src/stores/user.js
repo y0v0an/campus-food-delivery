@@ -67,7 +67,8 @@ export const useUserStore = defineStore('user', {
   actions: {
     /**
      * 设置用户信息（登录成功后调用）
-     * @param selectedLoginRole 登录页选中的 Tab（student|merchant|rider|admin）。选「骑手」且账号 isRider 时，currentRole 应为 rider（库中多为 role=student）
+     * @param {Object} userInfo - 用户信息对象
+     * @param {string} selectedLoginRole - 登录页选中的 Tab（student|merchant|rider|admin）。选「骑手」且账号 isRider 时，currentRole 应为 rider（库中多为 role=student）
      */
     setUserInfo(userInfo, selectedLoginRole = null) {
       this.userInfo = userInfo
@@ -248,6 +249,49 @@ export const useUserStore = defineStore('user', {
      */
     initUserStatus() {
       this.restoreFromStorage()
+      this.setupStorageListener()
+    },
+
+    /**
+     * 设置 storage 事件监听（同步多标签页状态）
+     */
+    setupStorageListener() {
+      // 只在浏览器环境中执行
+      if (typeof window === 'undefined') return
+
+      const handleStorageChange = (e) => {
+        // 只监听我们自己的用户存储变化
+        if (e.key === 'campus_delivery_user' || e.key === 'userInfo') {
+          // 当其他标签页修改了存储时，重新加载用户信息
+          this.restoreFromStorage()
+
+          // 如果新的存储显示已登出，清除当前状态
+          if (e.newValue === null || e.newValue === '""') {
+            this.userInfo = null
+            this.isLogin = false
+            this.currentRole = null
+            this.isRider = false
+            this.token = null
+          }
+        }
+      }
+
+      window.addEventListener('storage', handleStorageChange)
+
+      // 保存清理函数（供组件卸载时使用）
+      this._cleanupStorageListener = () => {
+        window.removeEventListener('storage', handleStorageChange)
+      }
+    },
+
+    /**
+     * 清理 storage 监听器
+     */
+    cleanupStorageListener() {
+      if (this._cleanupStorageListener) {
+        this._cleanupStorageListener()
+        this._cleanupStorageListener = null
+      }
     },
 
     /**

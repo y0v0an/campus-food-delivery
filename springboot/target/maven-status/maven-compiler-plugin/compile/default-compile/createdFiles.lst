@@ -18,6 +18,7 @@ com\community\cfgs\common\Result.class
 com\community\cfgs\entity\OrderItem.class
 com\community\cfgs\mapper\CouponMapper.class
 com\community\cfgs\service\GroupCouponService.class
+com\community\cfgs\dto\AddressDTO.class
 com\community\cfgs\entity\DeliveryTrack.class
 com\community\cfgs\entity\PickupPoint.class
 com\community\cfgs\service\ReviewService$1.class

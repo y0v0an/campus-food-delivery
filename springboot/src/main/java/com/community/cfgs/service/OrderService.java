@@ -51,15 +51,14 @@ public class OrderService {
     /**
      * 创建订单（完整事务保护：库存扣减、优惠券核销、订单创建、购物车清空）
      * @param studentId 学生ID
-     * @param addressId 地址ID
-     * @param address 地址对象
+     * @param address 地址对象（配送订单需要，店内就餐传null）
      * @param remark 备注
      * @param orderType 订单类型（dine_in店内就餐 / delivery配送）
      * @param userCouponId 用户优惠券ID
      * @return 创建的订单
      */
     @Transactional(rollbackFor = Exception.class, isolation = Isolation.REPEATABLE_READ, timeout = 30)
-    public Order createOrder(String studentId, String addressId, Address address, String remark, String orderType, String userCouponId) {
+    public Order createOrder(String studentId, Address address, String remark, String orderType, String userCouponId) {
         boolean dineIn = "dine_in".equals(orderType);
         // 获取购物车
         LambdaQueryWrapper<CartItem> cartWrapper = new LambdaQueryWrapper<>();
