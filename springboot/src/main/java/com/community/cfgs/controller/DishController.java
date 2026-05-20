@@ -1,6 +1,7 @@
 package com.community.cfgs.controller;
 
 import com.community.cfgs.common.Result;
+import com.community.cfgs.dto.GroupEnabledDishVO;
 import com.community.cfgs.entity.Dish;
 import com.community.cfgs.service.DishService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -83,5 +84,12 @@ public class DishController {
         List<String> dishIds = (List<String>) params.get("dishIds");
         int affected = dishService.applyGroupTemplate(merchantId, dishIds, targetCount, discountRate);
         return Result.success("已应用到" + affected + "个菜品");
+    }
+
+    @GetMapping("/group-enabled")
+    public Result<List<GroupEnabledDishVO>> listGroupEnabled(
+            @RequestParam(required = false, defaultValue = "default") String sortBy,
+            @RequestParam(required = false) String userId) {
+        return Result.success(dishService.listGroupEnabledDishes(sortBy, userId));
     }
 }
