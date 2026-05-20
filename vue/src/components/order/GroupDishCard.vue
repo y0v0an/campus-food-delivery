@@ -195,9 +195,10 @@ const handleStartGroup = () => {
 .merchant-info {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 11px;
+  gap: 6px;
+  font-size: 10px;
   color: #909399;
+  flex-wrap: wrap;
 }
 
 .info-item {

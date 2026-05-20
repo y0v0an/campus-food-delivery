@@ -30,7 +30,92 @@
       </el-radio-group>
     </div>
 
-    <!-- 订单列表 -->
+    <!-- 拼单订单区域 -->
+    <div class="group-orders-section" v-if="activeGroupOrders.length > 0">
+      <div class="section-header">
+        <h3 class="section-title">
+          <iconify-icon icon="lucide:users" class="title-icon"></iconify-icon>
+          拼单订单 ({{ activeGroupOrders.length }})
+        </h3>
+      </div>
+      <div class="group-order-list">
+        <div
+          v-for="groupOrder in activeGroupOrders"
+          :key="groupOrder.id"
+          class="group-order-card"
+        >
+          <!-- 菜品信息 -->
+          <div class="group-order-dish">
+            <img :src="getImageUrl(groupOrder.dishImage)" :alt="groupOrder.dishName" class="dish-img" />
+            <div class="dish-details">
+              <h4 class="dish-name">{{ groupOrder.dishName }}</h4>
+              <p class="initiator">发起人：{{ groupOrder.initiatorName }}</p>
+            </div>
+          </div>
+
+          <!-- 拼单进度 -->
+          <div class="group-progress">
+            <div class="progress-info">
+              <span class="progress-count">{{ groupOrder.currentCount }}/{{ groupOrder.targetCount }}人</span>
+              <span class="progress-status" :class="`status-${groupOrder.status}`">
+                {{ getGroupStatusText(groupOrder.status) }}
+              </span>
+            </div>
+            <div class="progress-bar">
+              <div
+                class="progress-fill"
+                :class="{ full: groupOrder.currentCount >= groupOrder.targetCount }"
+                :style="{ width: `${Math.min(100, (groupOrder.currentCount / groupOrder.targetCount) * 100)}%` }"
+              ></div>
+            </div>
+          </div>
+
+          <!-- 参与成员 -->
+          <div class="group-members" v-if="groupOrder.members && groupOrder.members.length > 0">
+            <span class="members-label">成员：</span>
+            <span class="member-name" v-for="member in groupOrder.members" :key="member.id">
+              {{ member.userName }}
+            </span>
+          </div>
+
+          <!-- 截止时间 -->
+          <div class="group-expire" v-if="groupOrder.expireAt">
+            <iconify-icon icon="lucide:clock" class="icon"></iconify-icon>
+            <span>{{ formatExpireTime(groupOrder.expireAt) }}</span>
+          </div>
+
+          <!-- 操作按钮 -->
+          <div class="group-actions">
+            <el-button
+              v-if="groupOrder.status === 'full'"
+              type="primary"
+              size="small"
+              @click="acceptGroupOrder(groupOrder)"
+            >
+              接单成团
+            </el-button>
+            <el-button
+              v-if="canCancelGroup(groupOrder)"
+              type="danger"
+              size="small"
+              plain
+              @click="confirmCancelGroupOrder(groupOrder)"
+            >
+              取消拼单
+            </el-button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 普通订单列表 -->
+    <div class="section-header" v-if="orders.length > 0">
+      <h3 class="section-title">
+        <iconify-icon icon="lucide:shopping-bag" class="title-icon"></iconify-icon>
+        普通订单 ({{ orders.length }})
+      </h3>
+    </div>
+
     <div class="order-list">
       <div v-if="filteredOrders.length === 0" class="empty-state">
         <el-empty description="暂无订单" />
@@ -190,6 +275,11 @@ const filteredOrders = computed(() => {
   return orders.value.filter(o => o.status === activeStatus.value)
 })
 
+// 活跃的拼单订单（open 或 full 状态）
+const activeGroupOrders = computed(() => {
+  return (groupOrders.value || []).filter(go => ['open', 'full'].includes(go.status))
+})
+
 // 详情弹窗
 const detailVisible = ref(false)
 const currentOrder = ref(null)
@@ -219,6 +309,18 @@ const formatTime = (timeStr) => {
   if (!timeStr) return ''
   const date = new Date(timeStr)
   return `${date.getMonth() + 1}/${date.getDate()} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+}
+
+// 格式化过期时间
+const formatExpireTime = (timeStr) => {
+  if (!timeStr) return ''
+  const date = new Date(timeStr)
+  const remain = date.getTime() - Date.now()
+  if (remain <= 0) return '已过期'
+  const minutes = Math.floor(remain / 60000)
+  if (minutes < 60) return `剩余${minutes}分钟`
+  const hours = Math.floor(minutes / 60)
+  return `剩余${hours}小时${minutes % 60}分钟`
 }
 
 const getImageUrl = (url) => {
@@ -464,6 +566,184 @@ onUnmounted(() => {
 
   .filter-tabs {
     margin-bottom: $spacing-lg;
+  }
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-base;
+    padding: $spacing-base 0;
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: $spacing-sm;
+      font-size: $font-size-lg;
+      font-weight: $font-weight-semibold;
+      color: $color-text-primary;
+
+      .title-icon {
+        font-size: 20px;
+        color: $color-text-secondary;
+      }
+    }
+  }
+
+  .group-orders-section {
+    background: $color-bg-white;
+    border-radius: $border-radius-md;
+    padding: $spacing-base;
+    margin-bottom: $spacing-lg;
+    box-shadow: $shadow-sm;
+
+    .group-order-list {
+      display: flex;
+      flex-direction: column;
+      gap: $spacing-base;
+    }
+
+    .group-order-card {
+      display: flex;
+      flex-wrap: wrap;
+      gap: $spacing-base;
+      padding: $spacing-base;
+      background: linear-gradient(135deg, #fff7ed 0%, #fffbf7 100%);
+      border: 1px solid #ffe7d3;
+      border-radius: $border-radius-base;
+
+      .group-order-dish {
+        display: flex;
+        gap: $spacing-sm;
+        flex: 1;
+        min-width: 200px;
+
+        .dish-img {
+          width: 50px;
+          height: 50px;
+          border-radius: $border-radius-sm;
+          object-fit: cover;
+        }
+
+        .dish-details {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+
+          .dish-name {
+            font-size: $font-size-base;
+            font-weight: $font-weight-medium;
+            margin-bottom: 2px;
+          }
+
+          .initiator {
+            font-size: $font-size-sm;
+            color: $color-text-secondary;
+          }
+        }
+      }
+
+      .group-progress {
+        flex: 1;
+        min-width: 150px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+
+        .progress-info {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 6px;
+
+          .progress-count {
+            font-size: $font-size-lg;
+            font-weight: $font-weight-bold;
+            color: #FF7A45;
+          }
+
+          .progress-status {
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: $font-size-sm;
+
+            &.status-open {
+              background: #e6f7ff;
+              color: #1890ff;
+            }
+
+            &.status-full {
+              background: #fff7e6;
+              color: #fa8c16;
+              font-weight: $font-weight-medium;
+            }
+          }
+        }
+
+        .progress-bar {
+          height: 6px;
+          background: #f0f2f5;
+          border-radius: 3px;
+          overflow: hidden;
+
+          .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #FFB84D 0%, #FF7A45 100%);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+
+            &.full {
+              background: linear-gradient(90deg, #52c41a 0%, #389e0d 100%);
+            }
+          }
+        }
+      }
+
+      .group-members {
+        flex-basis: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        background: rgba(255, 255, 255, 0.6);
+        border-radius: $border-radius-sm;
+
+        .members-label {
+          font-size: $font-size-sm;
+          color: $color-text-secondary;
+        }
+
+        .member-name {
+          padding: 2px 8px;
+          background: white;
+          border-radius: 10px;
+          font-size: $font-size-sm;
+          color: $color-text-primary;
+        }
+      }
+
+      .group-expire {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 6px 10px;
+        background: rgba(255, 122, 69, 0.1);
+        border-radius: $border-radius-sm;
+        font-size: $font-size-sm;
+        color: #FF7A45;
+
+        .icon {
+          font-size: 14px;
+        }
+      }
+
+      .group-actions {
+        display: flex;
+        gap: $spacing-xs;
+        align-self: center;
+      }
+    }
   }
 
   .order-list {

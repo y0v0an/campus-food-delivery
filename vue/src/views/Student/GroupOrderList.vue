@@ -51,13 +51,6 @@
       >
         销量最高
       </div>
-      <div
-        class="sort-tab"
-        :class="{ active: sortBy === 'distance' }"
-        @click="sortBy = 'distance'; loadDishes()"
-      >
-        距离最近
-      </div>
     </div>
 
     <!-- 可拼单菜品列表 -->

@@ -97,60 +97,45 @@
     </div>
 
     <!-- 推荐菜品 -->
-    <div class="px-6 py-4" v-if="recommendedDishes.length">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-lg font-black text-gray-800">🔥 热门推荐</h2>
-        <span class="text-xs text-orange-500 font-bold">查看更多</span>
+    <div class="px-5 py-3" v-if="recommendedDishes.length">
+      <div class="flex justify-between items-center mb-3">
+        <h2 class="text-base font-black text-gray-800">🔥 热门推荐</h2>
       </div>
-      <div class="flex gap-4 overflow-x-auto custom-scrollbar pb-2">
+      <div class="flex gap-4 overflow-x-auto pb-2 hide-scrollbar">
         <div
             v-for="dish in recommendedDishes"
             :key="dish.id"
-            class="flex-shrink-0 w-28 cursor-pointer active:scale-95 transition-transform"
+            class="flex-shrink-0 cursor-pointer active:scale-95 transition-transform"
             @click="goToMerchant(dish.merchantId)"
         >
-          <img :src="getImageUrl(dish.image)" :alt="dish.name" class="w-28 h-28 rounded-2xl object-cover shadow-md" />
-          <div class="mt-2">
-            <span class="text-sm font-bold text-gray-800 block truncate">{{ dish.name }}</span>
-            <span class="text-sm font-black text-orange-500">¥{{ dish.price }}</span>
+          <div class="relative">
+            <img :src="getImageUrl(dish.image)" :alt="dish.name" class="w-24 h-24 rounded-xl object-cover shadow-md" />
+            <span class="absolute bottom-0 right-0 bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-tl-lg rounded-br-lg">¥{{ dish.price }}</span>
           </div>
+          <span class="text-sm font-medium text-gray-700 block truncate mt-2 max-w-[96px]">{{ dish.name }}</span>
         </div>
       </div>
     </div>
 
     <!-- 热门拼单 -->
-    <div class="px-6 py-4" v-if="hotGroupOrders.length">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-lg font-black text-gray-800">👥 热门拼单</h2>
-        <span class="text-xs text-orange-500 font-bold">查看全部</span>
+    <div class="px-5 py-3" v-if="hotGroupOrders.length">
+      <div class="flex justify-between items-center mb-3">
+        <h2 class="text-base font-black text-gray-800">👥 热门拼单</h2>
       </div>
-      <div class="flex gap-4 overflow-x-auto custom-scrollbar pb-2">
+      <div class="flex gap-4 overflow-x-auto pb-2 hide-scrollbar">
         <div
             v-for="go in hotGroupOrders"
             :key="go.id"
-            class="flex-shrink-0 w-28 cursor-pointer active:scale-95 transition-transform"
+            class="flex-shrink-0 cursor-pointer active:scale-95 transition-transform"
             @click="goToMerchant(go.merchantId)"
         >
-          <img :src="getImageUrl(go.dishImage)" :alt="go.dishName" class="w-28 h-28 rounded-2xl object-cover shadow-md" />
-          <div class="mt-2">
-            <span class="text-sm font-bold text-gray-800 block truncate">{{ go.dishName }}</span>
-            <div class="flex items-center gap-1 mt-1">
-              <span class="text-xs font-bold text-gray-500">{{ go.currentCount }}/{{ go.targetCount }}人</span>
-            </div>
-            <div class="price-section">
-              <span class="current-price">¥{{ go.unitPrice }}</span>
-              <span v-if="go.originalPrice && go.originalPrice > go.unitPrice"
-                    class="original-price">
-                ¥{{ go.originalPrice }}
-              </span>
-              <span v-if="go.discountRate" class="discount-tag">
-                {{ (go.discountRate * 10).toFixed(1) }}折
-              </span>
-            </div>
-            <div class="delivery-hint mt-1">
-              <span class="text-[10px] text-blue-500">配送约¥{{ calculateGroupDeliveryFee(go) }}/人</span>
-            </div>
+          <div class="relative">
+            <img :src="getImageUrl(go.dishImage)" :alt="go.dishName" class="w-24 h-24 rounded-xl object-cover shadow-md" />
+            <span v-if="go.discountRate" class="absolute top-0 left-0 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-tl-lg rounded-br-lg">{{ (go.discountRate * 10).toFixed(1) }}折</span>
+            <span class="absolute bottom-0 right-0 bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-tl-lg rounded-br-lg">¥{{ go.unitPrice }}</span>
           </div>
+          <span class="text-sm font-medium text-gray-700 block truncate mt-2 max-w-[96px]">{{ go.dishName }}</span>
+          <span class="text-xs text-gray-500">{{ go.currentCount }}/{{ go.targetCount }}人</span>
         </div>
       </div>
     </div>
@@ -395,13 +380,17 @@ const loadMerchants = async () => {
     const result = await request.get('/merchant/list')
     const merchantsWithData = result || []
 
-    // 为每个商家加载前3个菜品
+    // 为每个商家加载菜品，按销量排序取前5道作为招牌菜
     const dishPromises = merchantsWithData.map(async (merchant) => {
       try {
         const dishes = await request.get(`/dish/list/${merchant.id}`)
+        // 按销量降序排序，取前5道作为招牌菜
+        const signatureDishes = (dishes || [])
+          .sort((a, b) => (b.sales || 0) - (a.sales || 0))
+          .slice(0, 5)
         return {
           ...merchant,
-          dishes: (dishes || []).slice(0, 3) // 只取前3个
+          dishes: signatureDishes
         }
       } catch {
         return {
@@ -502,6 +491,15 @@ onMounted(() => {
   scrollbar-width: none;
 }
 
+/* 隐藏滚动条通用类 */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* 分类滚动容器 */
 .category-scroll-wrapper {
   position: relative;
@@ -568,12 +566,12 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
   padding: 0 4px;
 }
 
 .section-title {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 900;
   color: #1a1a2e;
   letter-spacing: -0.02em;

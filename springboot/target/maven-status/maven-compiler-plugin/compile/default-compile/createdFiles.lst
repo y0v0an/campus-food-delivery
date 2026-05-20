@@ -4,6 +4,7 @@ com\community\cfgs\config\WebConfig.class
 com\community\cfgs\service\GroupOrderService.class
 com\community\cfgs\controller\MerchantController.class
 com\community\cfgs\entity\RiderApplication.class
+com\community\cfgs\dto\GroupEnabledDishVO$MerchantInfo.class
 com\community\cfgs\service\CouponService$CouponUseResult.class
 com\community\cfgs\dto\AvailableCouponResponse$CouponInfo.class
 com\community\cfgs\service\VerificationCodeService.class
@@ -45,6 +46,7 @@ com\community\cfgs\mapper\CartMapper.class
 com\community\cfgs\service\ProductService.class
 com\community\cfgs\controller\CouponController.class
 com\community\cfgs\mapper\GroupCouponUsageMapper.class
+com\community\cfgs\dto\GroupEnabledDishVO.class
 com\community\cfgs\entity\Product.class
 com\community\cfgs\dto\RiderRegisterRequest.class
 com\community\cfgs\entity\Dish.class

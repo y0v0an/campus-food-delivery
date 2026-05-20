@@ -46,6 +46,7 @@ E:\Desktop\校园外卖配送系统-增加拼单优惠券\校园外卖配送系统\springboot\src\main\
 E:\Desktop\校园外卖配送系统-增加拼单优惠券\校园外卖配送系统\springboot\src\main\java\com\community\cfgs\entity\UserCoupon.java
 E:\Desktop\校园外卖配送系统-增加拼单优惠券\校园外卖配送系统\springboot\src\main\java\com\community\cfgs\service\AddressService.java
 E:\Desktop\校园外卖配送系统-增加拼单优惠券\校园外卖配送系统\springboot\src\main\java\com\community\cfgs\config\WebConfig.java
+E:\Desktop\校园外卖配送系统-增加拼单优惠券\校园外卖配送系统\springboot\src\main\java\com\community\cfgs\dto\GroupEnabledDishVO.java
 E:\Desktop\校园外卖配送系统-增加拼单优惠券\校园外卖配送系统\springboot\src\main\java\com\community\cfgs\service\RiderService.java
 E:\Desktop\校园外卖配送系统-增加拼单优惠券\校园外卖配送系统\springboot\src\main\java\com\community\cfgs\vo\StudentReviewItemVo.java
 E:\Desktop\校园外卖配送系统-增加拼单优惠券\校园外卖配送系统\springboot\src\main\java\com\community\cfgs\mapper\OrderMapper.java

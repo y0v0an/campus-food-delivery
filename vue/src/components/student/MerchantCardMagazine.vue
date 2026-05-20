@@ -15,12 +15,6 @@
           <img :src="getImageUrl(merchant.logo)" :alt="merchant.name" class="mag-image" />
           <div class="mag-overlay"></div>
         </div>
-
-        <!-- 悬浮评分 -->
-        <div class="mag-rating">
-          <span class="mag-rating-value">{{ merchant.rating }}</span>
-          <iconify-icon icon="lucide:star" class="mag-rating-star" />
-        </div>
       </div>
 
       <!-- 右侧信息区 -->
@@ -28,8 +22,15 @@
         <!-- 商家名称 -->
         <h3 class="mag-name">{{ merchant.name }}</h3>
 
-        <!-- 月售信息 -->
-        <p class="mag-sales">月售 {{ merchant.monthSales }} 单</p>
+        <!-- 评分和月售 -->
+        <div class="mag-meta-row">
+          <div class="mag-rating-inline">
+            <iconify-icon icon="lucide:star" class="mag-star-inline" />
+            <span>{{ merchant.rating }}</span>
+          </div>
+          <span class="mag-divider">·</span>
+          <span class="mag-sales">月售 {{ merchant.monthSales }}</span>
+        </div>
 
         <!-- 信息标签 -->
         <div class="mag-tags">
@@ -49,20 +50,17 @@
         <!-- 热销菜品预览 -->
         <div v-if="merchant.dishes && merchant.dishes.length > 0" class="mag-dishes">
           <div class="mag-dishes-title">🔥 热销菜品</div>
-          <div class="mag-dishes-scroll-wrapper">
-            <div class="mag-dishes-scroll">
-              <div
-                v-for="dish in merchant.dishes"
-                :key="dish.id"
-                class="mag-dish-item"
-              >
-                <img :src="getImageUrl(dish.image)" :alt="dish.name" class="mag-dish-img" />
-                <span class="mag-dish-name">{{ dish.name }}</span>
-                <span class="mag-dish-price">¥{{ dish.price }}</span>
-              </div>
+          <div class="mag-dishes-scroll">
+            <div
+              v-for="dish in merchant.dishes"
+              :key="dish.id"
+              class="mag-dish-item"
+              @click.stop="goToMerchant(merchant.id)"
+            >
+              <img :src="getImageUrl(dish.image)" :alt="dish.name" class="mag-dish-img" />
+              <span class="mag-dish-name">{{ dish.name }}</span>
+              <span class="mag-dish-price">¥{{ dish.price }}</span>
             </div>
-            <!-- 右侧渐变提示 -->
-            <div class="mag-scroll-hint"></div>
           </div>
         </div>
       </div>
@@ -206,80 +204,78 @@ const goToMerchant = (merchantId) => {
   );
 }
 
-/* 评分徽章 */
-.mag-rating {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  width: 42px;
-  height: 42px;
-  background: linear-gradient(135deg, #fef08a, #fde047);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow:
-    0 4px 12px rgba(253, 224, 71, 0.4),
-    0 0 0 3px #fff;
-}
-
-.mag-rating-value {
-  font-size: 16px;
-  font-weight: 800;
-  color: #a16207;
-  line-height: 1;
-}
-
-.mag-rating-star {
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  color: #a16207;
-  fill: currentColor;
-  bottom: 8px;
-  right: 10px;
-}
-
 /* 右侧信息区 */
 .mag-info {
   flex: 1;
   display: flex;
   flex-direction: column;
   padding-left: 8px;
+  min-width: 0;
 }
 
 .mag-name {
   font-family: system-ui, -apple-system, sans-serif;
-  font-size: 22px;
+  font-size: 16px;
   font-weight: 900;
   color: #0a0a0a;
   line-height: 1.1;
   letter-spacing: -0.03em;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
+}
+
+/* 评分和月售行 */
+.mag-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 6px;
+}
+
+.mag-rating-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: #fffbeb;
+  color: #b45309;
+  padding: 2px 5px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.mag-star-inline {
+  width: 9px;
+  height: 9px;
+  fill: currentColor;
+  color: #f59e0b;
+}
+
+.mag-divider {
+  color: #e5e7eb;
+  font-size: 10px;
 }
 
 .mag-sales {
-  font-size: 13px;
+  font-size: 10px;
   color: #6b7280;
   font-weight: 500;
-  margin-bottom: 16px;
 }
 
 /* 标签 */
 .mag-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: 4px;
+  margin-bottom: 8px;
 }
 
 .mag-tag {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  border-radius: 12px;
-  font-size: 12px;
+  gap: 3px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 9px;
   font-weight: 700;
 }
 
@@ -301,27 +297,22 @@ const goToMerchant = (merchantId) => {
 /* 热销菜品 */
 .mag-dishes {
   margin-top: auto;
-  padding-top: 12px;
+  padding-top: 6px;
+  width: 100%;
 }
 
 .mag-dishes-title {
-  font-size: 12px;
+  font-size: 9px;
   font-weight: 700;
-  color: #6b7280;
-  margin-bottom: 10px;
-}
-
-.mag-dishes-scroll-wrapper {
-  position: relative;
+  color: #f97316;
+  margin-bottom: 6px;
 }
 
 .mag-dishes-scroll {
   display: flex;
-  gap: 12px;
+  gap: 8px;
   overflow-x: auto;
-  overflow-y: hidden;
-  padding: 4px 4px 12px 4px;
-  scroll-snap-type: x mandatory;
+  padding-bottom: 4px;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
@@ -330,36 +321,27 @@ const goToMerchant = (merchantId) => {
   display: none;
 }
 
-.mag-scroll-hint {
-  position: absolute;
-  top: 4px;
-  right: 0;
-  bottom: 12px;
-  width: 40px;
-  background: linear-gradient(to right, transparent, #fff);
-  pointer-events: none;
-}
-
 .mag-dish-item {
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  width: 80px;
-  scroll-snap-align: start;
+  gap: 4px;
+  width: 65px;
+  cursor: pointer;
 }
 
 .mag-dish-img {
-  width: 80px;
-  height: 80px;
+  width: 65px;
+  height: 65px;
   object-fit: cover;
-  border-radius: 12px;
+  border-radius: 10px;
   background: #f3f4f6;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .mag-dish-name {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
   color: #374151;
   text-align: center;
@@ -370,7 +352,7 @@ const goToMerchant = (merchantId) => {
 }
 
 .mag-dish-price {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   color: #f97316;
 }
@@ -417,78 +399,72 @@ const goToMerchant = (merchantId) => {
     border-radius: 18px;
   }
 
-  .mag-rating {
-    width: 36px;
-    height: 36px;
-    top: -4px;
-    right: -4px;
-  }
-
-  .mag-rating-value {
-    font-size: 14px;
-  }
-
-  .mag-rating-star {
-    width: 10px;
-    bottom: 6px;
-    right: 8px;
-  }
-
   .mag-name {
-    font-size: 16px;
+    font-size: 14px;
+    margin-bottom: 2px;
+  }
+
+  .mag-meta-row {
+    margin-bottom: 4px;
+    gap: 4px;
+  }
+
+  .mag-rating-inline {
+    font-size: 9px;
+    padding: 1px 4px;
+  }
+
+  .mag-star-inline {
+    width: 8px;
+    height: 8px;
   }
 
   .mag-sales {
-    font-size: 12px;
-    margin-bottom: 10px;
+    font-size: 9px;
+    margin-bottom: 0;
   }
 
   .mag-tags {
-    gap: 6px;
-    margin-bottom: 10px;
+    gap: 3px;
+    margin-bottom: 6px;
   }
 
   .mag-tag {
-    padding: 6px 10px;
-    font-size: 11px;
+    padding: 3px 6px;
+    font-size: 8px;
   }
 
   .mag-dishes {
     display: block;
-    margin-top: 10px;
+    margin-top: 6px;
   }
 
   .mag-dishes-title {
-    font-size: 11px;
-    margin-bottom: 8px;
+    font-size: 8px;
+    margin-bottom: 4px;
   }
 
   .mag-dishes-scroll {
-    gap: 10px;
-    padding: 4px 4px 10px 4px;
-  }
-
-  .mag-scroll-hint {
-    width: 30px;
-    background: linear-gradient(to right, transparent, rgba(255,255,255,0.9));
+    gap: 6px;
   }
 
   .mag-dish-item {
-    width: 70px;
+    width: 55px;
+    gap: 3px;
   }
 
   .mag-dish-img {
-    width: 70px;
-    height: 70px;
-    border-radius: 10px;
+    width: 55px;
+    height: 55px;
+    border-radius: 8px;
   }
 
   .mag-dish-name {
-    font-size: 11px;
+    font-size: 10px;
   }
 
   .mag-dish-price {
-    font-size: 13px;
+    font-size: 12px;
   }
 }
 
