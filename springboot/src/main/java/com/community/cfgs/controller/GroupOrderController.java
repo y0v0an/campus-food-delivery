@@ -32,9 +32,12 @@ public class GroupOrderController {
     }
 
     @PostMapping("/join")
-    public Result<String> join(@RequestBody Map<String, String> params) {
+    public Result<String> join(@RequestBody Map<String, Object> params) {
         try {
-            boolean ok = groupOrderService.joinGroupOrder(params.get("groupOrderId"), params.get("userId"));
+            String groupOrderId = (String) params.get("groupOrderId");
+            String userId = (String) params.get("userId");
+            Map<String, String> address = (Map<String, String>) params.get("address");
+            boolean ok = groupOrderService.joinGroupOrder(groupOrderId, userId, address);
             return ok ? Result.success("参与成功") : Result.error("参与失败");
         } catch (Exception e) {
             return Result.error(e.getMessage());

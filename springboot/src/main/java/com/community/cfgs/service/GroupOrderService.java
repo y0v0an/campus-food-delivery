@@ -300,7 +300,11 @@ public class GroupOrderService {
     }
 
     @Transactional(rollbackFor = Exception.class, isolation = Isolation.READ_COMMITTED)
-    public boolean joinGroupOrder(String groupOrderId, String userId) {
+    public boolean joinGroupOrder(String groupOrderId, String userId, Map<String, String> address) {
+        // 验证地址信息
+        if (address == null || address.get("building") == null || address.get("phone") == null) {
+            throw new RuntimeException("请选择收货地址");
+        }
         cancelExpiredOpenOrders();
         GroupOrder groupOrder = groupOrderMapper.selectById(groupOrderId);
         if (groupOrder == null) return false;
@@ -325,6 +329,13 @@ public class GroupOrderService {
         member.setQuantity(1);
         member.setAmount(groupOrder.getUnitPrice());
         member.setCreatedAt(LocalDateTime.now());
+        // 新增：设置地址信息
+        if (address != null) {
+            member.setAddressBuilding(address.get("building"));
+            member.setAddressRoom(address.get("room"));
+            member.setAddressContact(address.get("contact"));
+            member.setAddressPhone(address.get("phone"));
+        }
         groupOrderMemberMapper.insert(member);
 
         int newCount = groupOrder.getCurrentCount() + 1;
