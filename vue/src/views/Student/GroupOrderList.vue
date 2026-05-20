@@ -83,17 +83,33 @@
       :userId="userStore.userId"
       @join="handleJoinFromDrawer"
     />
+
+    <!-- 参与拼单对话框 -->
+    <el-dialog
+      v-model="joinDialogVisible"
+      title="参与拼单"
+      width="90%"
+      :style="{ maxWidth: '400px' }"
+    >
+      <p v-if="joiningOrder">确定要参与「{{ joiningOrder.dishName }}」的拼单吗？</p>
+      <AddressSelector v-model="selectedAddress" />
+      <template #footer>
+        <el-button @click="joinDialogVisible = false">再想想</el-button>
+        <el-button type="primary" @click="confirmJoin">确定参与</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import request from '@/axios/request'
 import { useUserStore } from '@/stores/user'
 import GroupDishCard from '@/components/order/GroupDishCard.vue'
 import GroupOrderDrawer from '@/components/order/GroupOrderDrawer.vue'
+import AddressSelector from '@/components/common/AddressSelector.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -109,6 +125,9 @@ const activeOrders = ref([])
 
 // 抽屉显示状态
 const drawerVisible = ref(false)
+const selectedAddress = ref(null)
+const joinDialogVisible = ref(false)
+const joiningOrder = ref(null)
 
 // 加载状态
 const loading = ref(false)
@@ -197,34 +216,41 @@ const handleStartGroup = async (dish) => {
 
 // 参与拼单
 const joinGroupOrder = async (order) => {
-  try {
-    await request.post('/group-order/join', {
-      groupOrderId: order.id,
-      userId: userStore.userId
-    })
-    ElMessage.success('参与成功！')
-    drawerVisible.value = false
-    await loadAllData()
-  } catch (error) {
-    // interceptor handles message
-  }
+  joiningOrder.value = order
+  selectedAddress.value = null // 重置地址
+  joinDialogVisible.value = true
 }
 
 // 从抽屉参与拼单
 const handleJoinFromDrawer = async (order) => {
+  joiningOrder.value = order
+  selectedAddress.value = null // 重置地址
+  joinDialogVisible.value = true
+}
+
+// 确认参与拼单
+const confirmJoin = async () => {
+  if (!selectedAddress.value) {
+    ElMessage.warning('请选择收货地址')
+    return
+  }
+
   try {
-    await ElMessageBox.confirm(
-      `确定要参与「${order.dishName}」的拼单吗？`,
-      '参与拼单',
-      {
-        confirmButtonText: '确定参与',
-        cancelButtonText: '再想想',
-        type: 'info'
+    await request.post('/group-order/join', {
+      groupOrderId: joiningOrder.value.id,
+      userId: userStore.userId,
+      address: {
+        building: selectedAddress.value.building,
+        room: selectedAddress.value.room,
+        contact: selectedAddress.value.contact,
+        phone: selectedAddress.value.phone
       }
-    )
-    await joinGroupOrder(order)
+    })
+    ElMessage.success('参与成功！')
+    joinDialogVisible.value = false
+    await loadAllData()
   } catch (error) {
-    // 用户取消
+    // interceptor handles message
   }
 }
 
