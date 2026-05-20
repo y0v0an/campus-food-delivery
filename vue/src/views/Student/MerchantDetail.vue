@@ -218,6 +218,9 @@
             </div>
           </div>
         </div>
+
+        <!-- 地址选择 -->
+        <AddressSelector v-model="selectedAddress" />
       </div>
       <template #footer>
         <span class="dialog-footer">
@@ -238,6 +241,7 @@ import { useUserStore } from '@/stores/user'
 import request from '@/axios/request'
 import { getImageUrl } from '@/utils/imageUrl'
 import { getAvailableGroupCoupons } from '@/api/groupCoupon'
+import AddressSelector from '@/components/common/AddressSelector.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -262,6 +266,7 @@ const selectedCoupon = ref(null)
 // 拼单对话框
 const groupOrderDialogVisible = ref(false)
 const currentDish = ref(null)
+const selectedAddress = ref(null)
 const targetCount = ref(2)
 
 // 菜品按分类
@@ -469,6 +474,12 @@ const startGroupOrder = async (dish) => {
 }
 
 const handleCreateGroupOrder = async () => {
+  // 验证地址
+  if (!selectedAddress.value) {
+    ElMessage.warning('请选择收货地址')
+    return
+  }
+
   try {
     const dishId = currentDish.value.id
     const remark = ''
@@ -477,10 +488,17 @@ const handleCreateGroupOrder = async () => {
       dishId,
       targetCount: targetCount.value,
       remark,
-      couponId: selectedCoupon.value?.id
+      couponId: selectedCoupon.value?.id,
+      address: {
+        building: selectedAddress.value.building,
+        room: selectedAddress.value.room,
+        contact: selectedAddress.value.contact,
+        phone: selectedAddress.value.phone
+      }
     })
     ElMessage.success('拼单已发起')
     groupOrderDialogVisible.value = false
+    selectedAddress.value = null // 重置地址选择
     loadGroupOrders(merchant.value.id)
   } catch (error) {
     // handled by interceptor
